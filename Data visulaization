@@ -1,0 +1,138 @@
+#Import all the crucial libraries
+import pandas as pd
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+import re
+import glob
+from datetime import datetime
+import sklearn
+import tensorflow as tf
+import seaborn as sns
+sns.set(style="white")
+sns.set(style="whitegrid", color_codes=True)
+#Import the dataset
+#Frequency in GHz
+# RCS in dB(m^2)
+#L : is the length of the substrate in mm
+#st : is the substrate thickness
+#l1 : Length of the capacitance generating part in mm
+#Yst : The gap between two plate in mm
+#w : Width of the conductive layer in mm
+#ct : Thickness of the conductive layer in mm
+# lb : Length of the ELC resonator in x-direction in mm
+# la : Length of the ELC resonator in y-direction in mm
+
+#When reading file use the eplace single quotes with double quotes and escape the slashes ex. csvFile = "C:\\Users\\...\\myData.csv"
+#with open('C:\\Users\\basnaym1\\MATLAB Drive\\ELC Resonator\\RCS of ELC resonator based on literature_modified_para_sweep.csv') as f:lines = f.readlines()
+
+
+# Initialize empty lists to store the data
+la_list = []
+lb_list = []
+l1_list = []
+w_list = []
+frequency_list = []
+rcs_list = []
+
+# Read the data file
+with open('C:\\Users\\basnaym1\\MATLAB Drive\\ELC Resonator\\RCS of ELC resonator based on literature_modified_para_sweep .csv', 'r') as file:
+    lines = file.readlines()
+
+# Iterate over the lines in the file
+for line in lines:
+    # Check if the line contains parameter values
+    if line.startswith('#Parameters ='):
+        # Extract the parameter values using string manipulation
+        params = line.split(';')
+        la = int(params[7].split('=')[1].strip())
+        lb = int(params[6].split('=')[1].strip())
+        l1 = float(params[2].split('=')[1].strip())
+        w  = float(params[4].split('=')[1].strip())
+    # Check if the line contains frequency and RCS values
+    elif any(char.isdigit() for char in line[:10]):
+        # Extract the frequency and RCS values
+        values = line.split()
+        frequency = float(values[0].replace('\t', ''))
+        rcs = float(values[1])
+        # Append the parameter values and data to the respective lists
+        la_list.append(la)
+        lb_list.append(lb)
+        l1_list.append(l1)
+        w_list.append(w)
+        frequency_list.append(frequency)
+        rcs_list.append(rcs)
+
+# Create a DataFrame from the lists
+data = {
+    'la': la_list,
+    'lb': lb_list,
+    'l1': l1_list,
+    'w': w_list,
+    'Frequency / GHz': frequency_list,
+    'RCS': rcs_list
+}
+df = pd.DataFrame(data)
+
+# Save the DataFrame as a CSV file
+df.to_csv('C:\\Users\\basnaym1\\MATLAB Drive\\ELC Resonator\\RCS of ELC resonator based on literature_modified_para_sweep_rearrenged.csv', index=False)
+
+#Correlation matrix
+corr = df.drop(['Frequency / GHz'], axis=1).corr() # examining correlations
+plt.figure(figsize=(12, 10))
+
+sns.heatmap(corr[(corr >= 0.0) | (corr <= -0.0)], 
+            cmap='viridis', vmax=1.0, vmin=-1.0, linewidths=0.1,
+            annot=True, annot_kws={"size": 8}, square=True)
+# Specify the folder path to save the image
+output_folder = r'C:\Users\basnaym1\GitHub\Test\Results'
+# Save the image to the output folder
+output_path = os.path.join(output_folder, 'correlation_matrix.png')
+plt.savefig(output_path)
+print(df.shape)
+print(df.info())
+
+#Graphical Visualization
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+features = tuple(df.columns.values)
+print(features)
+
+quantitative_features_list1 = ('la', 'lb', 'l1', 'w', 'Frequency / GHz', 'RCS')
+
+data_plot_data = {key: data[key] for key in quantitative_features_list1}
+data_mod_num = data_plot_data
+
+sns.pairplot(pd.DataFrame(data_plot_data), x_vars=quantitative_features_list1[:-1], y_vars=['RCS'])
+
+# Specify the folder path to save the image
+output_folder = r'C:\Users\basnaym1\GitHub\Test\Results'
+
+# Save the image to the output folder
+output_path = os.path.join(output_folder, 'Parameter with RCS.png')
+plt.savefig(output_path)
+
+
+#Box Plot visulaization
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Select the columns for box plots
+columns_of_interest = ['la', 'lb', 'l1', 'w']
+# Create a subset of data with the columns of interest
+data_subset = {key: data[key] for key in columns_of_interest}
+
+# Define the color palette
+colors = ['red', 'green', 'blue', 'orange']
+
+# Create a box plot for all columns with different colors
+sns.boxplot(data=pd.DataFrame(data_subset), palette=colors)
+plt.xlabel("Columns")
+plt.ylabel("Value")
+plt.title("Box Plot of Data Columns")
+# Save the box plot image to the output folder
+boxplot_output_path = os.path.join(output_folder, 'Box Plot of Data Columns.png')
+plt.savefig(boxplot_output_path)

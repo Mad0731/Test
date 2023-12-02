@@ -1,0 +1,85 @@
+#Import all the crucial libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import re
+import glob
+from datetime import datetime
+import sklearn
+import tensorflow as tf
+import seaborn as sns
+sns.set(style="white")
+sns.set(style="whitegrid", color_codes=True)
+#Import the dataset
+#Frequency in GHz
+# RCS in dB(m^2)
+#L : is the length of the substrate in mm
+#st : is the substrate thickness
+#l1 : Length of the capacitance generating part in mm
+#Yst : The gap between two plate in mm
+#w : Width of the conductive layer in mm
+#ct : Thickness of the conductive layer in mm
+# lb : Length of the ELC resonator in x-direction in mm
+# la : Length of the ELC resonator in y-direction in mm
+
+#When reading file use the eplace single quotes with double quotes and escape the slashes ex. csvFile = "C:\\Users\\...\\myData.csv"
+#with open('C:\\Users\\basnaym1\\MATLAB Drive\\ELC Resonator\\RCS of ELC resonator based on literature_modified_para_sweep.csv') as f:lines = f.readlines()
+
+# Initialize empty lists to store the data
+la_list = []
+lb_list = []
+l1_list = []
+w_list = []
+frequency_list = []
+rcs_list = []
+
+# Read the data file
+with open('C:\\Users\\basnaym1\\MATLAB Drive\\ELC Resonator\\RCS of ELC resonator based on literature_modified_para_sweep .csv', 'r') as file:
+    lines = file.readlines()
+
+# Iterate over the lines in the file
+for line in lines:
+    # Check if the line contains parameter values
+    if line.startswith('#Parameters ='):
+        # Extract the parameter values using string manipulation
+        params = line.split(';')
+        la = int(params[7].split('=')[1].strip())
+        lb = int(params[6].split('=')[1].strip())
+        l1 = float(params[2].split('=')[1].strip())
+        w  = float(params[4].split('=')[1].strip())
+    # Check if the line contains frequency and RCS values
+    elif any(char.isdigit() for char in line[:10]):
+        # Extract the frequency and RCS values
+        values = line.split()
+        frequency = float(values[0].replace('\t', ''))
+        rcs = float(values[1])
+        # Append the parameter values and data to the respective lists
+        la_list.append(la)
+        lb_list.append(lb)
+        l1_list.append(l1)
+        w_list.append(w)
+        frequency_list.append(frequency)
+        rcs_list.append(rcs)
+
+# Create a DataFrame from the lists
+data = {
+    'la': la_list,
+    'lb': lb_list,
+    'l1': l1_list,
+    'w': w_list,
+    'Frequency / GHz': frequency_list,
+    'RCS': rcs_list
+}
+df = pd.DataFrame(data)
+
+# Save the DataFrame as a CSV file
+df.to_csv('C:\\Users\\basnaym1\\MATLAB Drive\\ELC Resonator\\RCS of ELC resonator based on literature_modified_para_sweep_rearrenged.csv', index=False)
+print(df)
+
+
+#Identifying and handling the missing values
+# Check for missing values
+missing_values = df.isnull().sum()
+
+# Print the missing values count
+print(missing_values)
