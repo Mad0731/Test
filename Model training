@@ -1,0 +1,195 @@
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+import pandas as pd
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+import re
+import glob
+from datetime import datetime
+import sklearn
+import tensorflow as tf
+import seaborn as sns
+sns.set(style="white")
+sns.set(style="whitegrid", color_codes=True)
+# Split the data into input variables (X) and output variable (y)
+data = pd.read_csv ('C:\\Users\\basnaym1\\MATLAB Drive\\ELC Resonator\\RCS of ELC resonator based on literature_modified_para_sweep_rearrenged.csv')
+X = data.loc[:,data.columns != 'RCS']
+y = data['RCS']
+X.head()
+y.head()
+
+
+#Splitting the dataset
+from sklearn.model_selection import train_test_split
+
+X = X.values 
+y = y.values
+# Split the dataset into training and test sets
+X_train, X_test,y_train,y_test = train_test_split(X, y,  test_size=0.3, random_state=42)
+
+# Normalize the input variables
+scaler = MinMaxScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Print the shapes of the resulting datasets
+print("Training set shape:", X_train.shape)
+print("Test set shape:", X_test.shape)
+
+print(X_train)
+print(y_train)
+print(X_train.shape, y_train.shape)
+
+
+#Decision tree regression
+
+import tensorflow as tf
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import r2_score
+
+tf.random.set_seed(777)  # for reproducibility
+np.random.seed(999)
+
+drc = DecisionTreeRegressor()
+drc.fit(X_train,y_train)
+y_pred_tr = drc.predict(X_train)
+y_pred = drc.predict(X_test)
+mse = mean_squared_error(y_test,y_pred)
+print("Mean Squared Error:" , mse)
+
+
+
+print('{:.4f}'.format(r2_score(y_train, y_pred_tr, multioutput='variance_weighted')))
+print('{:.4f}'.format(r2_score(y_test, y_pred, multioutput='variance_weighted')))
+print('{:.4f}'.format(mean_squared_error(y_train, y_pred_tr, multioutput='uniform_average')))
+print('{:.4f}'.format(mean_squared_error(y_test, y_pred, multioutput='uniform_average')))
+
+# Visualize y_train vs y_pred
+plt.scatter(y_train, y_pred_tr)
+plt.xlabel("True Values (y_train)")
+plt.ylabel("Predicted Values (y_pred_tr)")
+plt.title("Scatter Plot of y_train vs y_pred_tr")
+
+# Specify the folder path to save the image
+output_folder = r'C:\Users\basnaym1\GitHub\Test\Results'
+
+# Save the image to the output folder
+output_path = os.path.join(output_folder, 'Decision tree y_train vs y_pred.png')
+plt.savefig(output_path)
+
+# Visualize y_test vs y_pred
+plt.scatter(y_test, y_pred)
+plt.xlabel("True Values (y_test)")
+plt.ylabel("Predicted Values (y_pred)")
+plt.title("Scatter Plot of y_test vs y_pred")
+
+# Specify the folder path to save the image
+output_folder = r'C:\Users\basnaym1\GitHub\Test\Results'
+
+# Save the image to the output folder
+output_path = os.path.join(output_folder, 'Decision tree y_test vs y_pred.png')
+plt.savefig(output_path)
+
+
+
+#K_nearest neighbors_regression
+
+import tensorflow as tf
+import numpy as np
+import pandas as pd
+import random
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.metrics import r2_score
+from sklearn.metrics import mean_squared_error
+
+
+tf.random.set_seed(777)  # for reproducibility
+np.random.seed(999)
+knn_reg = KNeighborsRegressor(n_neighbors=5, n_jobs=-1)
+knn_reg.fit(X_train, y_train)
+y_pred_tr=knn_reg.predict(X_train)
+y_pred=knn_reg.predict(X_test)
+
+print('{:.4f}'.format(r2_score(y_train, y_pred_tr, multioutput='variance_weighted')))
+print('{:.4f}'.format(r2_score(y_test, y_pred, multioutput='variance_weighted')))
+print('{:.4f}'.format(mean_squared_error(y_train, y_pred_tr, multioutput='uniform_average')))
+print('{:.4f}'.format(mean_squared_error(y_test, y_pred, multioutput='uniform_average')))
+
+# Visualize y_test vs y_pred
+plt.scatter(y_test, y_pred)
+plt.xlabel("True Values (y_test)")
+plt.ylabel("Predicted Values (y_pred)")
+plt.title("Scatter Plot of y_test vs y_pred")
+# Specify the folder path to save the image
+output_folder = r'C:\Users\basnaym1\GitHub\Test\Results'
+
+# Save the image to the output folder
+output_path = os.path.join(output_folder, 'K_nearest neighbors_regression y_test vs y_pred.png')
+plt.savefig(output_path)
+
+# Visualize y_train vs y_pred_tr
+plt.scatter(y_train, y_pred_tr)
+plt.xlabel("True Values (y_train)")
+plt.ylabel("Predicted Values (y_pred_tr)")
+plt.title("Scatter Plot of y_train vs y_pred_tr")
+# Specify the folder path to save the image
+output_folder = r'C:\Users\basnaym1\GitHub\Test\Results'
+
+# Save the image to the output folder
+output_path = os.path.join(output_folder, 'K_nearest neighbors_regression y_train vs y_pred.png')
+plt.savefig(output_path)
+
+
+#Random forest regression
+
+import tensorflow as tf
+import numpy as np
+import random
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import r2_score
+from sklearn.metrics import mean_squared_error
+tf.random.set_seed(777)  # for reproducibility
+np.random.seed(999)
+
+forest_reg = RandomForestRegressor(random_state=0, n_estimators=10, n_jobs=-1)
+forest_reg.fit(X_train, y_train)
+y_pred_tr=forest_reg.predict(X_train)
+y_pred=forest_reg.predict(X_test)
+
+print('{:.4f}'.format(r2_score(y_train, y_pred_tr, multioutput='variance_weighted')))
+print('{:.4f}'.format(r2_score(y_test, y_pred, multioutput='variance_weighted')))
+print('{:.4f}'.format(mean_squared_error(y_train, y_pred_tr, multioutput='uniform_average'))) 
+print('{:.4f}'.format(mean_squared_error(y_test, y_pred, multioutput='uniform_average'))) 
+
+# Visualize y_test vs y_pred
+plt.scatter(y_test, y_pred)
+plt.xlabel("True Values (y_test)")
+plt.ylabel("Predicted Values (y_pred)")
+plt.title("Scatter Plot of y_test vs y_pred")
+# Specify the folder path to save the image
+output_folder = r'C:\Users\basnaym1\GitHub\Test\Results'
+
+# Save the image to the output folder
+output_path = os.path.join(output_folder, 'Random forest regression y_test vs y_pred.png')
+plt.savefig(output_path)
+
+# Visualize y_train vs y_pred_tr
+plt.scatter(y_train, y_pred_tr)
+plt.xlabel("True Values (y_train)")
+plt.ylabel("Predicted Values (y_pred_tr)")
+plt.title("Scatter Plot of y_train vs y_pred_tr")
+# Specify the folder path to save the image
+output_folder = r'C:\Users\basnaym1\GitHub\Test\Results'
+
+# Save the image to the output folder
+output_path = os.path.join(output_folder, 'Random forest regression y_train vs y_pred.png')
+plt.savefig(output_path)
+
+
+#Gaussian process regression
+
+
+
+#SVM_regression
