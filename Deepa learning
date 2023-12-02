@@ -1,0 +1,86 @@
+import pandas as pd
+import numpy as np
+import requests
+import io
+import os
+from sklearn import metrics
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.callbacks import EarlyStopping 
+import matplotlib.pyplot as plt
+
+
+# Split the data into input variables (X) and output variable (y)
+data = pd.read_csv ('C:\\Users\\basnaym1\\MATLAB Drive\\ELC Resonator\\RCS of ELC resonator based on literature_modified_para_sweep_rearrenged.csv')
+X = data.loc[:,data.columns != 'RCS']
+y = data['RCS']
+X.head()
+y.head()
+
+
+#Splitting the dataset
+from sklearn.model_selection import train_test_split
+
+X = X.values 
+y = y.values
+# Split the dataset into training and test sets
+X_train, X_test,y_train,y_test = train_test_split(X, y,  test_size=0.3, random_state=42)
+
+# Normalize the input variables
+scaler = MinMaxScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Print the shapes of the resulting datasets
+print("Training set shape:", X_train.shape)
+print("Test set shape:", X_test.shape)
+
+
+# Define the model architecture
+model = Sequential()
+model.add(Dense(32,activation='relu',input_shape=(5,)))  # Hidden layer 1 with 32 neurons
+model.add(Dense(16, activation='relu'))  # Hidden layer  2 with 16 neurons
+model.add(Dense(1))  # Output layer
+
+# Compile the model
+model.compile(optimizer='adam', loss='mean_squared_error')
+monitor = EarlyStopping(monitor='val_loss', min_delta=1e-3, patience=5,verbose=1,mode='auto',restore_best_weights=True) 
+
+# Train the model
+model.fit(X_train, y_train,validation_data=(X_test, y_test),callbacks=[monitor],verbose=2, epochs=1000)
+
+# Evaluate the model on the testing set
+loss = model.evaluate(X_test, y_test)
+print('Loss on testing set:', loss)       
+
+# Plot the chart
+
+#Regression chart
+def chart_regression(pred,y,sort=True):
+    t=pd.DataFrame({'pred':pred,'y':y.flatten()})
+    if sort:
+        t.sort_values(by=['y'],inplace=True)
+    plt.plot(t['y'].tolist(),label='Expected')
+    plt.plot(t['pred'].tolist(),label='Predicted')
+    plt.ylabel('Output')
+    plt.legend()
+    plt.show()
+
+pred = model.predict (X_test)
+chart_regression(pred.flatten(),y_test)
+# Specify the folder path to save the image
+output_folder = r'C:\Users\basnaym1\GitHub\Test\Results'
+
+# Save the image to the output folder
+output_path = os.path.join(output_folder, 'Deep learning expected vs predicted.png')
+plt.savefig(output_path)
+#Predict
+pred=model.predict(X_test)
+#Measure measn squared error
+score_1= metrics.mean_squared_error(pred,y_test)
+print("Final MSE:{}".format(score_1))
+#Measure root mean square error
+score_2=np.sqrt(metrics.mean_squared_error(pred,y_test))
+print("Final RMSE:{}".format(score_2))
